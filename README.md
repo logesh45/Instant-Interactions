@@ -1,4 +1,4 @@
-# Designer Agent for Micro-Interaction Generator
+# Instant Interaction - Micro Interaction Generator Agent
 
 This agent is designed to generate, verify, and auto-correct UI micro-interaction code snippets (HTML, CSS, and minimal JS) for frontend development. It leverages the Google ADK Agent framework and integrates with Playwright for headless verification.
 
