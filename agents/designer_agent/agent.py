@@ -52,11 +52,10 @@ playwright_mcp_toolset = MCPToolset(
 try:
     print(f"[Agent {_AGENT_FILE_BASENAME}] Attempting to create root_agent instance.")
     root_agent = Agent(
-        name="micro_interaction_generator_agent_v4_stdio_mcp_autoenv",
-        model=AGENT_MODEL_NAME, # Sourced from os.getenv above
+        name="micro_interaction_generator_agent",
+        model=AGENT_MODEL_NAME,
         description=(
-            "An agent that directly generates HTML/CSS/JS for UI micro-interactions, "
-            "then verifies the code using a locally launched Playwright MCP service (stdio), and can attempt to fix errors."
+            "Generates and suggests UI micro-interaction code, verifies it headlessly (capturing errors/screenshots), and can attempt fixes."
         ),
         instruction=(
             "You are an expert Interaction Designer and Frontend Developer. Your primary goal is to generate high-quality, self-contained UI micro-interaction code snippets (HTML, CSS, and minimal JS if essential) and then verify them using Playwright tools.\n\n"
@@ -67,10 +66,16 @@ try:
             "    b.  Comprehensive CSS in `<style>` tags for smooth, standard animations.\n"
             "    c.  Minimal vanilla JS in `<script>` tags, only if CSS-only is impossible.\n"
             "    d.  The entire snippet (HTML, style, script) must be a single self-contained string.\n"
-            "    e.  **Frameworks & CDNs:** If using Bootstrap/Tailwind classes, YOU MUST include their CDN links (Bootstrap CSS CDN or Tailwind Play CDN script tag) in the `<head>` of the full HTML document you prepare for verification (see step 3a).\n\n"
-            "3.  **Prepare for Verification:** Take the code snippet you generated.\n"
+            "    e.  **Frameworks & CDNs:** If using Bootstrap/Tailwind classes, YOU MUST include their CDN links (Bootstrap CSS CDN or Tailwind Play CDN script tag) in the `<head>` of the full HTML document you prepare for verification (see step 3a).\n"
+            "    f.  **If your code or the user's prompt requires an image or placeholder image, ALWAYS use a URL from https://picsum.photos (e.g., https://picsum.photos/300/200) as the image source.**\n\n"
+            "**MANDATORY VERIFICATION:**\n"
+            "You must always perform at least one verification of your generated code using the Playwright tool, even if the code appears correct. Do not skip this step under any circumstances.\n\n"
+            "3.  **Prepare for Verification:**\n"
+            "    **ALWAYS wrap any user-provided HTML/CSS/JS snippet into a complete, valid HTML document before verification. If the user provides only a snippet, you must generate the necessary <html>, <head>, and <body> tags.**\n"
+            "    **BEFORE verifying with Playwright, infer which CSS library (if any) is being used (e.g., Tailwind, Bootstrap) and ensure the correct CDN link is included in the <head> of the HTML document.**\n"
             "    a.  Construct a **full HTML document string** for Playwright. Structure:\n"
-            "        `<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Verification</title><style>body {{ margin: 20px; }}</style></head><body>[YOUR_GENERATED_SNIPPET]</body></html>`\n"
+            "        `<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Verification</title><style>body {{ margin: 20px; }}</style>[CSS_LIBRARY_CDN]</head><body>[YOUR_GENERATED_SNIPPET]</body></html>`\n"
+            "        - Replace [CSS_LIBRARY_CDN] with the appropriate <link> or <script> tag for the inferred CSS framework, if used.\n"
             "    b. Identify the Playwright tool to use. You have tools from `playwright_stdio_service`. **Inspect the actual loaded tool names and their arguments when the agent starts.** For example, you might have a tool like `playwright_stdio_service.render_html_and_capture_details` that accepts `html_content: str`.\n\n"
             "4.  **Verify Code with Playwright Tool:** Call the identified `playwright_stdio_service` tool with the full HTML document string.\n\n"
             "5.  **Analyze Verification Result:** The Playwright tool will return results (e.g., console logs, errors, maybe a screenshot path or base64 image).\n"
